@@ -93,6 +93,12 @@ internal class Parser
     {
         args = SplitFirstArgOnSeparators(args, out var arg);
         var shortOptions = arg.AsSpan(ShortNameOptionPrefix.Length);
+        if (shortOptions.IsEmpty)
+        {
+            _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown symbol: {arg}"));
+            return [];
+        }
+
         for (var i = 0; i < shortOptions.Length - 1; i++)
         {
             var shortName = shortOptions[i];
