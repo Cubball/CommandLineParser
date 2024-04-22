@@ -11,7 +11,7 @@ internal class Parser
 
     private CommandDescriptor _currentCommand;
     private bool _parseOptions = true;
-    private int _currnetPositionalArgumentIndex;
+    private int _currentPositionalArgumentIndex;
 
     public Parser(CommandDescriptor rootCommand) => _currentCommand = rootCommand;
 
@@ -144,8 +144,23 @@ internal class Parser
 
     private Span<string> ParsePositionalArgument(Span<string> args)
     {
-        // TODO:
-        return args;
+        if (_currentPositionalArgumentIndex >= _currentCommand.Arguments.Count)
+        {
+            // TODO: ran out of pos args, unknown token, error here
+            throw new Exception();
+        }
+
+        var argument = _currentCommand.Arguments[_currentPositionalArgumentIndex];
+        _currentPositionalArgumentIndex++;
+        var converted = argument.TryConvert(args[0], out var convertedValue);
+        if (!converted)
+        {
+            // TODO: failed to convert arg, error here
+            throw new Exception();
+        }
+
+        // TODO: add convertedValue to some sort of collection of parsed args
+        return args[1..];
     }
 
     // NOTE: should these be extracted?
