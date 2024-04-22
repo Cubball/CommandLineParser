@@ -62,6 +62,7 @@ internal class Parser
             }
 
             _currentCommand = subcommand;
+            _parsingResultBuilder.SetCurrentCommand(_currentCommand);
         }
 
         return [];
@@ -136,7 +137,7 @@ internal class Parser
 
         var argument = _currentCommand.Arguments[_currentPositionalArgumentIndex];
         _currentPositionalArgumentIndex++;
-        return ParseArgument(args, argument, argument.Name);
+        return ParseArgument(args, argument, argument, _parsingResultBuilder.AddParsedArgumentValue);
     }
 
     private Span<string> ParseOption(Span<string> args, OptionDescriptor option)
@@ -149,16 +150,17 @@ internal class Parser
                 return [];
             }
 
-            args = ParseArgument(args, argument, option.FullName);
+            args = ParseArgument(args, argument, option, _parsingResultBuilder.AddParsedOptionValue);
         }
 
         return args;
     }
 
-    private Span<string> ParseArgument(
+    private Span<string> ParseArgument<T>(
         Span<string> args,
         IArgumentDescriptor argument,
-        string key)
+        T key,
+        Action<T, object> addValue)
     {
         if (args[0] == FullNameOptionPrefix)
         {
@@ -168,7 +170,7 @@ internal class Parser
 
         if (!argument.Repeated)
         {
-            return ParseSingleArgumentValue(args, argument, key);
+            return ParseSingleArgumentValue(args, argument, key, addValue);
         }
 
         while (!args.IsEmpty)
@@ -179,16 +181,17 @@ internal class Parser
                 return args[1..];
             }
 
-            args = ParseSingleArgumentValue(args, argument, key);
+            args = ParseSingleArgumentValue(args, argument, key, addValue);
         }
 
         return [];
     }
 
-    private Span<string> ParseSingleArgumentValue(
+    private Span<string> ParseSingleArgumentValue<T>(
         Span<string> args,
         IArgumentDescriptor argument,
-        string key)
+        T key,
+        Action<T, object> addValue)
     {
         if (!argument.TryConvert(args[0], out var convertedValue))
         {
@@ -196,7 +199,7 @@ internal class Parser
             return [];
         }
 
-        _parsingResultBuilder.AddParsedValue(key, convertedValue);
+        addValue(key, convertedValue);
         return args[1..];
     }
 
