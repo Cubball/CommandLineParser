@@ -144,6 +144,12 @@ internal class Parser
     {
         foreach (var argument in option.Arguments)
         {
+            if (!_parseOptions)
+            {
+                _parsingResultBuilder.AddError(new(argument.Name, $"Expected to see argument '{argument.Name}' for the '{option.FullName}' option, but encountered '{FullNameOptionPrefix}'"));
+                return [];
+            }
+
             if (args.IsEmpty)
             {
                 _parsingResultBuilder.AddError(new(argument.Name, $"No args were provided for argument '{argument.Name}' for the '{option.FullName}' option"));
