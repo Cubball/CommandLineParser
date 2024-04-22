@@ -9,11 +9,17 @@ internal class Parser
     // also, should this be a string?
     private const string ShortNameOptionPrefix = "-";
 
+    private readonly IParsingResultBuilder _parsingResultBuilder;
+
     private CommandDescriptor _currentCommand;
     private bool _parseOptions = true;
     private int _currentPositionalArgumentIndex;
 
-    public Parser(CommandDescriptor rootCommand) => _currentCommand = rootCommand;
+    public Parser(IParsingResultBuilder parsingResultBuilder, CommandDescriptor rootCommand)
+    {
+        _parsingResultBuilder = parsingResultBuilder;
+        _currentCommand = rootCommand;
+    }
 
     public void Parse(string[] args)
     {
@@ -73,8 +79,8 @@ internal class Parser
         var option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
         if (option is null)
         {
-            // TODO: unknown option, error here
-            throw new Exception();
+            _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown option: {arg}"));
+            return [];
         }
 
         return ParseOption(args[1..], option);
@@ -89,31 +95,30 @@ internal class Parser
             var option = _currentCommand.Options.FirstOrDefault(o => o.ShortName == shortName);
             if (option is null)
             {
-                // TODO: unknown option, error here
-                throw new Exception();
+                _parsingResultBuilder.AddError(new(shortName.ToString(), $"Encountered an unknown short option: {ShortNameOptionPrefix}{shortName}"));
+                return [];
             }
 
             if (option.Arguments.Count > 0)
             {
-                // TODO: option with values can only be last in a group of shortOptions, error here
-                throw new Exception();
+                _parsingResultBuilder.AddError(new(option.FullName, $"Option '{option.FullName}' requires 1 or more arguments, but is not the last one in the gruop of short options"));
+                return [];
             }
 
-            // TODO: add option into collection of parsed args as a flag (i.e. option with no arguments)
+            _parsingResultBuilder.AddFlag(option.FullName);
         }
 
         var lastOptionName = shortOptions[^1];
         var lastOption = _currentCommand.Options.FirstOrDefault(o => o.ShortName == lastOptionName);
         if (lastOption is null)
         {
-            // TODO: unknown option, error here
-            throw new Exception();
+            _parsingResultBuilder.AddError(new(lastOptionName.ToString(), $"Encountered an unknown short option: {ShortNameOptionPrefix}{lastOptionName}"));
+            return [];
         }
 
         if (lastOption.Arguments.Count == 0)
         {
-            // TODO: add option into collection of parsed args as a flag (i.e. option with no arguments)
-            return args[1..];
+            _parsingResultBuilder.AddFlag(lastOption.FullName);
         }
 
         return ParseOption(args[1..], lastOption);
@@ -123,14 +128,13 @@ internal class Parser
     {
         if (_currentPositionalArgumentIndex >= _currentCommand.Arguments.Count)
         {
-            // TODO: ran out of pos args, unknown token, error here
-            throw new Exception();
+            _parsingResultBuilder.AddError(new(args[0], $"Encountered an unknown token '{args[0]}' that is not the argument of any command or option"));
+            return [];
         }
 
         var argument = _currentCommand.Arguments[_currentPositionalArgumentIndex];
         _currentPositionalArgumentIndex++;
-        // TODO: put actual function instead of lambda
-        return ParseArgument(args, argument, argument.Name, (key, value) => { });
+        return ParseArgument(args, argument, argument.Name);
     }
 
     private Span<string> ParseOption(Span<string> args, OptionDescriptor option)
@@ -139,11 +143,11 @@ internal class Parser
         {
             if (args.IsEmpty)
             {
-                // TODO: not enough args provided, error here
-                throw new Exception();
+                _parsingResultBuilder.AddError(new(argument.Name, $"No args were provided for argument '{argument.Name}' for the '{option.FullName}' option"));
+                return [];
             }
 
-            args = ParseArgument(args, argument, option.FullName, (key, value) => { });
+            args = ParseArgument(args, argument, option.FullName);
         }
 
         return args;
@@ -152,8 +156,7 @@ internal class Parser
     private Span<string> ParseArgument(
         Span<string> args,
         IArgumentDescriptor argument,
-        string key,
-        Action<string, object> addParsedValue)
+        string key)
     {
         if (args[0] == FullNameOptionPrefix)
         {
@@ -163,7 +166,7 @@ internal class Parser
 
         if (!argument.Repeated)
         {
-            return ParseSingleArgumentValue(args, argument, key, addParsedValue);
+            return ParseSingleArgumentValue(args, argument, key);
         }
 
         while (!args.IsEmpty)
@@ -174,25 +177,24 @@ internal class Parser
                 return args[1..];
             }
 
-            args = ParseSingleArgumentValue(args, argument, key, addParsedValue);
+            args = ParseSingleArgumentValue(args, argument, key);
         }
 
         return [];
     }
 
-    private static Span<string> ParseSingleArgumentValue(
+    private Span<string> ParseSingleArgumentValue(
         Span<string> args,
         IArgumentDescriptor argument,
-        string key,
-        Action<string, object> addParsedValue)
+        string key)
     {
         if (!argument.TryConvert(args[0], out var convertedValue))
         {
-            // TODO: failed to convert arg, error here
-            throw new Exception();
+            _parsingResultBuilder.AddError(new(args[0], $"Failed to convert arg '{args[0]}' to target type"));
+            return [];
         }
 
-        addParsedValue(key, convertedValue);
+        _parsingResultBuilder.AddParsedValue(key, convertedValue);
         return args[1..];
     }
 
