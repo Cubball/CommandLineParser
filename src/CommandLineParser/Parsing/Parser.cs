@@ -20,6 +20,7 @@ internal class Parser
     {
         _parsingResultBuilder = parsingResultBuilder;
         _currentCommand = rootCommand;
+        _parsingResultBuilder.SetCurrentCommand(_currentCommand);
     }
 
     public void Parse(string[] args)

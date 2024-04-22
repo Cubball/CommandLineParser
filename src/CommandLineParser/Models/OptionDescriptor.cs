@@ -13,6 +13,7 @@ internal class OptionDescriptor
         // maybe check for it when building the option?
         FullName = fullName;
         Description = description;
+        // NOTE: only the last argument can be repeated, need to enforce it probably
         Arguments = arguments;
         ShortName = shortName;
         Required = required;
