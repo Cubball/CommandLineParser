@@ -175,6 +175,13 @@ internal class Parser
 
         while (!args.IsEmpty)
         {
+            // WARN: this means if we have a command with multiple arguments that accept arbitrary number of values,
+            // like arg1 and arg2, then we can do this:
+            // command arg1_1 arg1_2 arg1_3 -- arg2_1 arg2_2
+            // and it would be interpreted as arg1 having 3 values and arg2 having 2 values
+            // this might be something that we do or do not want
+            // if we'd want to remove this 'feature',
+            // we'd need to check whether the arg being parsed is positional, or is related to some option
             if (args[0] == FullNameOptionPrefix)
             {
                 _parseOptions = false;

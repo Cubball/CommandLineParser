@@ -9,6 +9,8 @@ internal class OptionDescriptor
         char? shortName = null,
         bool required = false)
     {
+        // NOTE: if required and arguments - empty -> does not make sense
+        // maybe check for it when building the option?
         FullName = fullName;
         Description = description;
         Arguments = arguments;
