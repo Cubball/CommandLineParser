@@ -8,6 +8,7 @@ internal class Parser
     // TODO: extract these into config class?
     // also, should this be a string?
     private const string ShortNameOptionPrefix = "-";
+    private static readonly char[] Separators = ['='];
 
     private readonly IParsingResultBuilder _parsingResultBuilder;
 
@@ -23,7 +24,6 @@ internal class Parser
 
     public void Parse(string[] args)
     {
-        // TODO: split args in form '--foo=bar' and alike into '--foo' and 'bar' before actually parsing
         var spanOfArgs = ParseSubcommands(args);
         while (!spanOfArgs.IsEmpty)
         {
@@ -76,6 +76,7 @@ internal class Parser
             return args[1..];
         }
 
+        args = SplitFirstArgOnSeparators(args, out arg);
         var option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
         if (option is null)
         {
@@ -83,12 +84,13 @@ internal class Parser
             return [];
         }
 
-        return ParseOption(args[1..], option);
+        return ParseOption(args, option);
     }
 
     private Span<string> ParseShortNameOptions(Span<string> args)
     {
-        var shortOptions = args[0].AsSpan(ShortNameOptionPrefix.Length);
+        args = SplitFirstArgOnSeparators(args, out var arg);
+        var shortOptions = arg.AsSpan(ShortNameOptionPrefix.Length);
         for (var i = 0; i < shortOptions.Length - 1; i++)
         {
             var shortName = shortOptions[i];
@@ -121,7 +123,7 @@ internal class Parser
             _parsingResultBuilder.AddFlag(lastOption.FullName);
         }
 
-        return ParseOption(args[1..], lastOption);
+        return ParseOption(args, lastOption);
     }
 
     private Span<string> ParsePositionalArgument(Span<string> args)
@@ -202,4 +204,19 @@ internal class Parser
     private static bool IsFullNameOption(string arg) => arg.StartsWith(FullNameOptionPrefix, StringComparison.InvariantCulture);
 
     private static bool IsShortNameOptions(string arg) => arg.StartsWith(ShortNameOptionPrefix, StringComparison.InvariantCulture);
+
+    private static Span<string> SplitFirstArgOnSeparators(Span<string> args, out string newFirstArg)
+    {
+        var firstArg = args[0];
+        var separatorIndex = firstArg.IndexOfAny(Separators);
+        if (separatorIndex == -1)
+        {
+            newFirstArg = firstArg;
+            return args[1..];
+        }
+
+        newFirstArg = firstArg[..separatorIndex];
+        args[0] = firstArg[(separatorIndex + 1)..];
+        return args;
+    }
 }
