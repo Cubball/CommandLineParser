@@ -5,15 +5,15 @@ internal class OptionDescriptor
     public OptionDescriptor(
         string fullName,
         string description,
+        IReadOnlyList<IArgumentDescriptor> arguments,
         char? shortName = null,
-        bool required = false,
-        IReadOnlyList<IArgumentDescriptor>? arguments = null)
+        bool required = false)
     {
         FullName = fullName;
         Description = description;
+        Arguments = arguments;
         ShortName = shortName;
         Required = required;
-        Arguments = arguments ?? [];
     }
 
     public string FullName { get; }
