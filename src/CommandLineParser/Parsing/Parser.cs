@@ -77,28 +77,7 @@ internal class Parser
             throw new Exception();
         }
 
-        var index = 1;
-        foreach (var argument in option.Arguments)
-        {
-            if (index >= args.Length)
-            {
-                // TODO: not enough args provided, error here
-                throw new Exception();
-            }
-
-            // TODO: consider case when argument.Repeated
-            var converted = argument.TryConvert(args[index], out var convertedValue);
-            if (!converted)
-            {
-                // TODO: failed to convert arg, error here
-                throw new Exception();
-            }
-
-            // TODO: add convertedValue to some sort of collection of parsed args
-            index++;
-        }
-
-        return args[index..];
+        return ParseOption(args[1..], option);
     }
 
     private Span<string> ParseShortNameOptions(Span<string> args)
@@ -137,9 +116,7 @@ internal class Parser
             return args[1..];
         }
 
-        // TODO: parse args like for a full name option
-        // return args[something..];
-        return args;
+        return ParseOption(args[1..], lastOption);
     }
 
     private Span<string> ParsePositionalArgument(Span<string> args)
@@ -152,14 +129,70 @@ internal class Parser
 
         var argument = _currentCommand.Arguments[_currentPositionalArgumentIndex];
         _currentPositionalArgumentIndex++;
-        var converted = argument.TryConvert(args[0], out var convertedValue);
-        if (!converted)
+        // TODO: put actual function instead of lambda
+        return ParseArgument(args, argument, argument.Name, (key, value) => { });
+    }
+
+    private Span<string> ParseOption(Span<string> args, OptionDescriptor option)
+    {
+        foreach (var argument in option.Arguments)
+        {
+            if (args.IsEmpty)
+            {
+                // TODO: not enough args provided, error here
+                throw new Exception();
+            }
+
+            args = ParseArgument(args, argument, option.FullName, (key, value) => { });
+        }
+
+        return args;
+    }
+
+    private Span<string> ParseArgument(
+        Span<string> args,
+        IArgumentDescriptor argument,
+        string key,
+        Action<string, object> addParsedValue)
+    {
+        if (args[0] == FullNameOptionPrefix)
+        {
+            _parseOptions = false;
+            return args[1..];
+        }
+
+        if (!argument.Repeated)
+        {
+            return ParseSingleArgumentValue(args, argument, key, addParsedValue);
+        }
+
+        while (!args.IsEmpty)
+        {
+            if (args[0] == FullNameOptionPrefix)
+            {
+                _parseOptions = false;
+                return args[1..];
+            }
+
+            args = ParseSingleArgumentValue(args, argument, key, addParsedValue);
+        }
+
+        return [];
+    }
+
+    private static Span<string> ParseSingleArgumentValue(
+        Span<string> args,
+        IArgumentDescriptor argument,
+        string key,
+        Action<string, object> addParsedValue)
+    {
+        if (!argument.TryConvert(args[0], out var convertedValue))
         {
             // TODO: failed to convert arg, error here
             throw new Exception();
         }
 
-        // TODO: add convertedValue to some sort of collection of parsed args
+        addParsedValue(key, convertedValue);
         return args[1..];
     }
 
