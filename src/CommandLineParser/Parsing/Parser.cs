@@ -62,8 +62,42 @@ internal class Parser
 
     private Span<string> ParseFullNameOption(Span<string> args)
     {
-        // TODO:
-        return args;
+        var arg = args[0];
+        if (arg == FullNameOptionPrefix)
+        {
+            _parseOptions = false;
+            return args[1..];
+        }
+
+        var option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
+        if (option is null)
+        {
+            // TODO: unknown option, error here
+            throw new Exception();
+        }
+
+        var index = 1;
+        foreach (var argument in option.Arguments)
+        {
+            if (index >= args.Length)
+            {
+                // TODO: not enough args provided, error here
+                throw new Exception();
+            }
+
+            // TODO: consider case when argument.Repeated
+            var converted = argument.TryConvert(args[index], out var convertedValue);
+            if (!converted)
+            {
+                // TODO: failed to convert arg, error here
+                throw new Exception();
+            }
+
+            // TODO: add convertedValue to some sort of collection of parsed args
+            index++;
+        }
+
+        return args[index..];
     }
 
     private Span<string> ParseShortNameOptions(Span<string> args)
