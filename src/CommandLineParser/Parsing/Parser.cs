@@ -115,7 +115,7 @@ internal class Parser
                 return [];
             }
 
-            _parsingResultBuilder.AddFlag(option.FullName);
+            _parsingResultBuilder.AddFlag(option);
         }
 
         var lastOptionName = shortOptions[^1];
@@ -128,7 +128,7 @@ internal class Parser
 
         if (lastOption.Arguments.Count == 0)
         {
-            _parsingResultBuilder.AddFlag(lastOption.FullName);
+            _parsingResultBuilder.AddFlag(lastOption);
         }
 
         return ParseOption(args, lastOption);

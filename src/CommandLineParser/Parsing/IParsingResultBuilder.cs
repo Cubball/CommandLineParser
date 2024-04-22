@@ -11,7 +11,7 @@ internal interface IParsingResultBuilder
 
     void AddParsedArgumentValue(IArgumentDescriptor argument, object value);
 
-    void AddFlag(string flagFullName);
+    void AddFlag(OptionDescriptor option);
 
     void AddError(ParsingError error);
 }
