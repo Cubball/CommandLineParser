@@ -176,6 +176,5 @@ public class ParserTests
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[1].Name), args[2]);
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[2].Name), args[5]);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
-        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
     }
 }

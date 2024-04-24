@@ -126,11 +126,6 @@ internal class Parser
             return [];
         }
 
-        if (lastOption.Arguments.Count == 0)
-        {
-            _parsingResultBuilder.AddFlag(lastOption);
-        }
-
         return ParseOption(args, lastOption);
     }
 
@@ -148,6 +143,17 @@ internal class Parser
     }
 
     private Span<string> ParseOption(Span<string> args, OptionDescriptor option)
+    {
+        if (option.Arguments.Count == 0)
+        {
+            _parsingResultBuilder.AddFlag(option);
+            return args;
+        }
+
+        return ParseOptionWithArguments(args, option);
+    }
+
+    private Span<string> ParseOptionWithArguments(Span<string> args, OptionDescriptor option)
     {
         foreach (var argument in option.Arguments)
         {
