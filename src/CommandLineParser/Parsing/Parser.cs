@@ -157,12 +157,6 @@ internal class Parser
     {
         foreach (var argument in option.Arguments)
         {
-            if (!_parseOptions)
-            {
-                _parsingResultBuilder.AddError(new(argument.Name, $"Expected to see argument '{argument.Name}' for the '{option.FullName}' option, but encountered '{FullNameOptionPrefix}'"));
-                return [];
-            }
-
             if (args.IsEmpty)
             {
                 _parsingResultBuilder.AddError(new(argument.Name, $"No args were provided for argument '{argument.Name}' for the '{option.FullName}' option"));
@@ -179,33 +173,29 @@ internal class Parser
         Span<string> args,
         IArgumentDescriptor argument)
     {
-        if (args[0] == FullNameOptionPrefix)
-        {
-            _parseOptions = false;
-            return args[1..];
-        }
-
         if (!argument.Repeated)
         {
             return ParseSingleArgumentValue(args, argument);
         }
 
+        var noValuesParsed = true;
         while (!args.IsEmpty)
         {
-            // WARN: this means if we have a command with multiple arguments that accept arbitrary number of values,
-            // like arg1 and arg2, then we can do this:
-            // command arg1_1 arg1_2 arg1_3 -- arg2_1 arg2_2
-            // and it would be interpreted as arg1 having 3 values and arg2 having 2 values
-            // this might be something that we do or do not want
-            // if we'd want to remove this 'feature',
-            // we'd need to check whether the arg being parsed is positional, or is related to some option
+            // NOTE: traditionally, '--' is used to terminate the list of options and to tell the program to treat the rest of the args as positional arguments.
+            // This usage is still present here, however '--' can also be used to terminate a list of values of an argument that accepts an arbitrary number of values
             if (args[0] == FullNameOptionPrefix)
             {
-                _parseOptions = false;
+                if (noValuesParsed)
+                {
+                    _parsingResultBuilder.AddError(new(argument.Name, $"Argument {argument.Name} requires at least 1 value, but {FullNameOptionPrefix} was encountered before any of the values"));
+                    return [];
+                }
+
                 return args[1..];
             }
 
             args = ParseSingleArgumentValue(args, argument);
+            noValuesParsed = false;
         }
 
         return [];
