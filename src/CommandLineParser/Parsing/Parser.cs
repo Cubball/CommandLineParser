@@ -144,7 +144,7 @@ internal class Parser
 
         var argument = _currentCommand.Arguments[_currentPositionalArgumentIndex];
         _currentPositionalArgumentIndex++;
-        return ParseArgument(args, argument, argument, _parsingResultBuilder.AddParsedArgumentValue);
+        return ParseArgument(args, argument);
     }
 
     private Span<string> ParseOption(Span<string> args, OptionDescriptor option)
@@ -163,17 +163,15 @@ internal class Parser
                 return [];
             }
 
-            args = ParseArgument(args, argument, option, _parsingResultBuilder.AddParsedOptionValue);
+            args = ParseArgument(args, argument);
         }
 
         return args;
     }
 
-    private Span<string> ParseArgument<T>(
+    private Span<string> ParseArgument(
         Span<string> args,
-        IArgumentDescriptor argument,
-        T key,
-        Action<T, object> addValue)
+        IArgumentDescriptor argument)
     {
         if (args[0] == FullNameOptionPrefix)
         {
@@ -183,7 +181,7 @@ internal class Parser
 
         if (!argument.Repeated)
         {
-            return ParseSingleArgumentValue(args, argument, key, addValue);
+            return ParseSingleArgumentValue(args, argument);
         }
 
         while (!args.IsEmpty)
@@ -201,17 +199,15 @@ internal class Parser
                 return args[1..];
             }
 
-            args = ParseSingleArgumentValue(args, argument, key, addValue);
+            args = ParseSingleArgumentValue(args, argument);
         }
 
         return [];
     }
 
-    private Span<string> ParseSingleArgumentValue<T>(
+    private Span<string> ParseSingleArgumentValue(
         Span<string> args,
-        IArgumentDescriptor argument,
-        T key,
-        Action<T, object> addValue)
+        IArgumentDescriptor argument)
     {
         if (!argument.TryConvert(args[0], out var convertedValue))
         {
@@ -219,7 +215,7 @@ internal class Parser
             return [];
         }
 
-        addValue(key, convertedValue);
+        _parsingResultBuilder.AddParsedArgumentValue(argument, convertedValue);
         return args[1..];
     }
 

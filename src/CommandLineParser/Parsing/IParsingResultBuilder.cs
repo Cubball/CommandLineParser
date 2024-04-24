@@ -7,8 +7,6 @@ internal interface IParsingResultBuilder
 {
     void SetCurrentCommand(CommandDescriptor command);
 
-    void AddParsedOptionValue(OptionDescriptor option, object value);
-
     void AddParsedArgumentValue(IArgumentDescriptor argument, object value);
 
     void AddFlag(OptionDescriptor option);

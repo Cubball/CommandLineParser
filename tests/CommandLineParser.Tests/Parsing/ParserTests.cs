@@ -36,7 +36,6 @@ public class ParserTests
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[2].Name), args[2]);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
-        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddParsedOptionValue(default!, default!);
     }
 
     [Fact]
@@ -57,7 +56,6 @@ public class ParserTests
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[0].Name), args[0]);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
-        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddParsedOptionValue(default!, default!);
     }
 
     [Fact]
@@ -80,7 +78,6 @@ public class ParserTests
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[0].Name), args[2]);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
-        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddParsedOptionValue(default!, default!);
     }
 
     [Fact]
@@ -104,7 +101,6 @@ public class ParserTests
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[1].Name), args[2]);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
-        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddParsedOptionValue(default!, default!);
     }
 
     [Fact]
@@ -129,7 +125,6 @@ public class ParserTests
         _mockParsingResultBuilder.DidNotReceive().AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[1].Name), Arg.Any<object>());
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
-        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddParsedOptionValue(default!, default!);
     }
 
     [Fact]
@@ -155,6 +150,32 @@ public class ParserTests
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[1].Name), args[3]);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
-        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddParsedOptionValue(default!, default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesAllArguments_WhenFullNameOptionsArePresentBetweenArguments()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [],
+        [
+            new ArgumentDescriptor<string>("arg1", index: 0, repeated: false),
+            new ArgumentDescriptor<string>("arg2", index: 1, repeated: false),
+            new ArgumentDescriptor<string>("arg3", index: 2, repeated: false),
+        ], [
+            new OptionDescriptor("--opt1", "description", []),
+            new OptionDescriptor("--opt2", "description", [new ArgumentDescriptor<string>("opt2arg1")]),
+        ]);
+        var args = new[] { "foo", "--opt1", "bar", "--opt2", "value", "baz" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[0].Name), args[0]);
+        _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[1].Name), args[2]);
+        _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[2].Name), args[5]);
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddFlag(default!);
     }
 }
