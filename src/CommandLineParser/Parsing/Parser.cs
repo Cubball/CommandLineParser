@@ -183,6 +183,8 @@ internal class Parser
         {
             // NOTE: traditionally, '--' is used to terminate the list of options and to tell the program to treat the rest of the args as positional arguments.
             // This usage is still present here, however '--' can also be used to terminate a list of values of an argument that accepts an arbitrary number of values
+            //
+            // Extract it into settings?
             if (args[0] == FullNameOptionPrefix)
             {
                 if (noValuesParsed)
@@ -215,7 +217,6 @@ internal class Parser
         return args[1..];
     }
 
-    // NOTE: should these be extracted?
     private static bool IsFullNameOption(string arg) => arg.StartsWith(FullNameOptionPrefix, StringComparison.InvariantCulture);
 
     private static bool IsShortNameOptions(string arg) => arg.StartsWith(ShortNameOptionPrefix, StringComparison.InvariantCulture);
