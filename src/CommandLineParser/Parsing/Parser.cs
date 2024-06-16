@@ -82,7 +82,7 @@ internal class Parser
         {
             var optionName = arg[..separatorIndex];
             var optionValue = arg[(separatorIndex + 1)..];
-            option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
+            option = _currentCommand.Options.FirstOrDefault(o => o.FullName == optionName);
             if (option is null)
             {
                 _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown option: {arg}"));

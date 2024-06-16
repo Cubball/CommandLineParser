@@ -138,7 +138,7 @@ public class ParserTests
             new ArgumentDescriptor<string>("arg3", repeated: false),
         ], [
             new OptionDescriptor("--opt1", "description"),
-            new OptionDescriptor("--opt2", "description", new ArgumentDescriptor<string>("opt2arg1")),
+            new OptionDescriptor("--opt2", "description", new ArgumentDescriptor<string>("opt2arg")),
         ]);
         var args = new[] { "foo", "--opt1", "bar", "--opt2", "value", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
@@ -165,7 +165,7 @@ public class ParserTests
         ], [
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
             new OptionDescriptor("--opt2", "description", shortName: 'b'),
-            new OptionDescriptor("--opt3", "description", new ArgumentDescriptor<string>("opt3arg1"), shortName: 'c'),
+            new OptionDescriptor("--opt3", "description", new ArgumentDescriptor<string>("opt3arg"), shortName: 'c'),
         ]);
         var args = new[] { "foo", "-a", "bar", "-bc", "value", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
@@ -298,4 +298,391 @@ public class ParserTests
         _mockParsingResultBuilder.Received(1).AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[0].Name), args[5]);
         _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
     }
+
+    [Fact]
+    public void Parse_ParsesFullNameOptionsAsFlags_WhenTheyDoNotHaveArguments()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description"),
+            new OptionDescriptor("--opt2", "description"),
+            new OptionDescriptor("--opt3", "description"),
+        ]);
+        var args = new[] { "--opt1", "--opt3", "--opt2" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[0].FullName));
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[1].FullName));
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[2].FullName));
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesFullNameOptions_WhenTheyHaveArguments()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg")),
+            new OptionDescriptor("--opt2", "description", argument: new ArgumentDescriptor<string>("opt2arg")),
+        ]);
+        var args = new[] { "--opt1", "foo", "--opt2", "bar" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[1]);
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[1].Argument!.Name), args[3]);
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesFullNameOption_WhenItHasArgumentWithUnlimitedValues()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+        ]);
+        var args = new[] { "--opt1", "foo", "bar", "baz" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[1]);
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[2]);
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[3]);
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_StopsParsingOptionWithArgumentWithUnlimitedValues_WhenEncountersFullNameOptionAndOptionsAreStillParsed()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+            new OptionDescriptor("--opt2", "description"),
+        ]);
+        var args = new[] { "--opt1", "foo", "bar", "--opt2" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[1]);
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[2]);
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[1].FullName));
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesFullNameOption_WhenArgumentIsSeparated()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg")),
+        ]);
+        var args = new[] { "--opt1=foo" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "foo");
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesOnlyFirstValueOfTheOption_WhenOptionHasArgumentWithUnlimitedOptionsAndIsSeparated()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [],
+        [
+            new ArgumentDescriptor<string>("arg1"),
+            new ArgumentDescriptor<string>("arg2"),
+        ],
+        [
+            new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+        ]);
+        var args = new[] { "--opt1=foo", "bar", "baz" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "foo");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[0].Name), "bar");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[1].Name), "baz");
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesOptionWithArgumentWithUnlimitedValues_WhenArgumentIsSeparatedButAppearsMultipleTimes()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+        ]);
+        var args = new[] { "--opt1=foo", "--opt1=bar", "--opt1=baz" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "foo");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "bar");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "baz");
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesShortNameOptionsAsFlags_WhenTheyDoNotHaveArguments()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a'),
+            new OptionDescriptor("--opt2", "description", shortName: 'b'),
+            new OptionDescriptor("--opt3", "description", shortName: 'c'),
+        ]);
+        var args = new[] { "-b", "-a", "-c" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[0].FullName));
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[1].FullName));
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[2].FullName));
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesShortNameOptions_WhenTheyAreGrouped()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a'),
+            new OptionDescriptor("--opt2", "description", shortName: 'b'),
+            new OptionDescriptor("--opt3", "description", shortName: 'c'),
+        ]);
+        var args = new[] { "-acb" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[0].FullName));
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[1].FullName));
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[2].FullName));
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesGroupedShortNameOptions_WhenTheLastOneHasArgument()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a'),
+            new OptionDescriptor("--opt2", "description", shortName: 'b', argument: new ArgumentDescriptor<string>("opt2arg")),
+            new OptionDescriptor("--opt3", "description", shortName: 'c'),
+        ]);
+        var args = new[] { "-acbfoo" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[0].FullName));
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[1].Argument!.Name), "foo");
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[2].FullName));
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_IgnoresShortOptions_WhenOneOfThemHasArgument()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a'),
+            new OptionDescriptor("--opt2", "description", shortName: 'b', argument: new ArgumentDescriptor<string>("opt2arg")),
+            new OptionDescriptor("--opt3", "description", shortName: 'c'),
+        ]);
+        var args = new[] { "-abcfoo" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[0].FullName));
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[1].Argument!.Name), "cfoo");
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesGroupedShortNameOptions_WhenArgumentIsASeperateArg()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a'),
+            new OptionDescriptor("--opt2", "description", shortName: 'b', argument: new ArgumentDescriptor<string>("opt2arg")),
+            new OptionDescriptor("--opt3", "description", shortName: 'c'),
+        ]);
+        var args = new[] { "-acb", "foo" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[0].FullName));
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[2].FullName));
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[1].Argument!.Name), args[1]);
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesShortNameOptions_WhenArgumentHasUnlimitedValues()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+        ]);
+        var args = new[] { "-a", "foo", "bar", "baz" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[1]);
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[2]);
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[3]);
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_StopsParsingShortNameOptionWithArgumentWithUnlimitedValues_WhenEncountersShortNameOptionAndOptionsAreStillParsed()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+            new OptionDescriptor("--opt2", "description", shortName: 'b'),
+        ]);
+        var args = new[] { "-a", "foo", "bar", "-b" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[1]);
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), args[2]);
+        _mockParsingResultBuilder.Received(1).AddFlag(Arg.Is<OptionDescriptor>(o => o.FullName == rootCommand.Options[1].FullName));
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesOnlyFirstValueOfTheShortOption_WhenOptionHasArgumentWithUnlimitedOptionsAndIsGrouped()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [],
+        [
+            new ArgumentDescriptor<string>("arg1"),
+            new ArgumentDescriptor<string>("arg2"),
+        ],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+            new OptionDescriptor("--opt2", "description", shortName: 'b'),
+        ]);
+        var args = new[] { "-afoo", "bar", "baz" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "foo");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[0].Name), "bar");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Arguments[1].Name), "baz");
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    [Fact]
+    public void Parse_ParsesShortOptionWithArgumentWithUnlimitedValues_WhenArgumentIsGroupedButAppearsMultipleTimes()
+    {
+        // Arragne
+        var rootCommand = new CommandDescriptor("main", "description", [], [],
+        [
+            new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
+        ]);
+        var args = new[] { "-afoo", "-abar", "-abaz" };
+        var sut = new Parser(_mockParsingResultBuilder, rootCommand);
+
+        // Act
+        sut.Parse(args);
+
+        // Assert
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "foo");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "bar");
+        _mockParsingResultBuilder.Received(1)
+            .AddParsedArgumentValue(Arg.Is<IArgumentDescriptor>(a => a.Name == rootCommand.Options[0].Argument!.Name), "baz");
+        _mockParsingResultBuilder.DidNotReceiveWithAnyArgs().AddError(default!);
+    }
+
+    // TODO: tests for subcommands
+    // TODO: tests for error cases
 }
