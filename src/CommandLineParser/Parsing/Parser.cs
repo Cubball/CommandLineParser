@@ -5,10 +5,8 @@ namespace CommandLineParser.Parsing;
 internal class Parser
 {
     private const string FullNameOptionPrefix = "--";
-    // TODO: extract these into config class?
-    // also, should this be a string?
     private const string ShortNameOptionPrefix = "-";
-    private static readonly char[] Separators = ['='];
+    private const char FullNameOptionValueSeparator = '=';
 
     private readonly IParsingResultBuilder _parsingResultBuilder;
 
@@ -78,28 +76,44 @@ internal class Parser
             return args[1..];
         }
 
-        args = SplitFirstArgOnSeparators(args, out arg);
-        var option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
+        var separatorIndex = arg.IndexOf(FullNameOptionValueSeparator);
+        OptionDescriptor? option;
+        if (separatorIndex != -1)
+        {
+            var optionName = arg[..separatorIndex];
+            var optionValue = arg[(separatorIndex + 1)..];
+            option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
+            if (option is null)
+            {
+                _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown option: {arg}"));
+                return [];
+            }
+
+            if (option.Argument is null)
+            {
+                _parsingResultBuilder.AddError(new(arg, $"Option '{option.FullName}' does not accept an argument, but it was provided: {optionValue}"));
+                return [];
+            }
+
+            args[0] = optionValue;
+            return ParseSingleArgumentValue(args, option.Argument);
+        }
+
+        option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
         if (option is null)
         {
             _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown option: {arg}"));
             return [];
         }
 
-        return ParseOption(args, option);
+        return ParseOption(args[1..], option);
     }
 
     private Span<string> ParseShortNameOptions(Span<string> args)
     {
-        args = SplitFirstArgOnSeparators(args, out var arg);
+        var arg = args[0];
         var shortOptions = arg.AsSpan(ShortNameOptionPrefix.Length);
-        if (shortOptions.IsEmpty)
-        {
-            _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown symbol: {arg}"));
-            return [];
-        }
-
-        for (var i = 0; i < shortOptions.Length - 1; i++)
+        for (var i = 0; i < shortOptions.Length; i++)
         {
             var shortName = shortOptions[i];
             var option = _currentCommand.Options.FirstOrDefault(o => o.ShortName == shortName);
@@ -109,24 +123,21 @@ internal class Parser
                 return [];
             }
 
-            if (option.Arguments.Count > 0)
+            if (option.Argument is not null)
             {
-                _parsingResultBuilder.AddError(new(option.FullName, $"Option '{option.FullName}' requires 1 or more arguments, but is not the last one in the gruop of short options"));
-                return [];
+                if (i + 1 == shortOptions.Length)
+                {
+                    return ParseOptionWithArguments(args[1..], option);
+                }
+
+                args[0] = shortOptions[(i + 1)..].ToString();
+                return ParseSingleArgumentValue(args, option.Argument);
             }
 
             _parsingResultBuilder.AddFlag(option);
         }
 
-        var lastOptionName = shortOptions[^1];
-        var lastOption = _currentCommand.Options.FirstOrDefault(o => o.ShortName == lastOptionName);
-        if (lastOption is null)
-        {
-            _parsingResultBuilder.AddError(new(lastOptionName.ToString(), $"Encountered an unknown short option: {ShortNameOptionPrefix}{lastOptionName}"));
-            return [];
-        }
-
-        return ParseOption(args, lastOption);
+        return args[1..];
     }
 
     private Span<string> ParsePositionalArgument(Span<string> args)
@@ -144,7 +155,7 @@ internal class Parser
 
     private Span<string> ParseOption(Span<string> args, OptionDescriptor option)
     {
-        if (option.Arguments.Count == 0)
+        if (option.Argument is null)
         {
             _parsingResultBuilder.AddFlag(option);
             return args;
@@ -155,49 +166,36 @@ internal class Parser
 
     private Span<string> ParseOptionWithArguments(Span<string> args, OptionDescriptor option)
     {
-        foreach (var argument in option.Arguments)
+        var argument = option.Argument!;
+        if (args.IsEmpty)
         {
-            if (args.IsEmpty)
-            {
-                _parsingResultBuilder.AddError(new(argument.Name, $"No args were provided for argument '{argument.Name}' for the '{option.FullName}' option"));
-                return [];
-            }
-
-            args = ParseArgument(args, argument);
+            _parsingResultBuilder.AddError(new(argument.Name, $"No args were provided for argument '{argument.Name}' for the '{option.FullName}' option"));
+            return [];
         }
 
-        return args;
+        return ParseArgument(args, argument);
     }
 
     private Span<string> ParseArgument(
         Span<string> args,
         IArgumentDescriptor argument)
     {
+        args = ParseSingleArgumentValue(args, argument);
         if (!argument.Repeated)
         {
-            return ParseSingleArgumentValue(args, argument);
+            return args;
         }
 
-        var noValuesParsed = true;
         while (!args.IsEmpty)
         {
-            // NOTE: traditionally, '--' is used to terminate the list of options and to tell the program to treat the rest of the args as positional arguments.
-            // This usage is still present here, however '--' can also be used to terminate a list of values of an argument that accepts an arbitrary number of values
-            //
-            // Extract it into settings?
-            if (args[0] == FullNameOptionPrefix)
+            // TODO: make this configurable? either stop parsing repeated arguments when encountered '--...' or no
+            // hmmm
+            if (IsFullNameOption(args[0]) && _parseOptions)
             {
-                if (noValuesParsed)
-                {
-                    _parsingResultBuilder.AddError(new(argument.Name, $"Argument {argument.Name} requires at least 1 value, but {FullNameOptionPrefix} was encountered before any of the values"));
-                    return [];
-                }
-
-                return args[1..];
+                return args;
             }
 
             args = ParseSingleArgumentValue(args, argument);
-            noValuesParsed = false;
         }
 
         return [];
@@ -219,20 +217,5 @@ internal class Parser
 
     private static bool IsFullNameOption(string arg) => arg.StartsWith(FullNameOptionPrefix, StringComparison.InvariantCulture);
 
-    private static bool IsShortNameOptions(string arg) => arg.StartsWith(ShortNameOptionPrefix, StringComparison.InvariantCulture);
-
-    private static Span<string> SplitFirstArgOnSeparators(Span<string> args, out string newFirstArg)
-    {
-        var firstArg = args[0];
-        var separatorIndex = firstArg.IndexOfAny(Separators);
-        if (separatorIndex == -1)
-        {
-            newFirstArg = firstArg;
-            return args[1..];
-        }
-
-        newFirstArg = firstArg[..separatorIndex];
-        args[0] = firstArg[(separatorIndex + 1)..];
-        return args;
-    }
+    private static bool IsShortNameOptions(string arg) => arg.StartsWith(ShortNameOptionPrefix, StringComparison.InvariantCulture) && arg.Length > ShortNameOptionPrefix.Length;
 }

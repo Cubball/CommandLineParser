@@ -5,16 +5,13 @@ internal class OptionDescriptor
     public OptionDescriptor(
         string fullName,
         string description,
-        IReadOnlyList<IArgumentDescriptor> arguments,
+        IArgumentDescriptor? argument = null,
         char? shortName = null,
         bool required = false)
     {
-        // NOTE: if required and arguments - empty -> does not make sense
-        // maybe check for it when building the option?
         FullName = fullName;
         Description = description;
-        // NOTE: only the last argument can be repeated, need to enforce it probably
-        Arguments = arguments;
+        Argument = argument;
         ShortName = shortName;
         Required = required;
     }
@@ -27,5 +24,5 @@ internal class OptionDescriptor
 
     public bool Required { get; }
 
-    public IReadOnlyList<IArgumentDescriptor> Arguments { get; }
+    public IArgumentDescriptor? Argument { get; }
 }

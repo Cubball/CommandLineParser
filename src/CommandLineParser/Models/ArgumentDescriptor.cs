@@ -9,19 +9,15 @@ internal class ArgumentDescriptor<T> : IArgumentDescriptor
 
     public ArgumentDescriptor(
         string name,
-        int index = 0,
         bool repeated = false,
         Func<string, T>? converter = null)
     {
         Name = name;
-        Index = index;
         Repeated = repeated;
         _converter = converter;
     }
 
     public string Name { get; }
-
-    public int Index { get; }
 
     public bool Repeated { get; }
 
