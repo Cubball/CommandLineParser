@@ -189,8 +189,8 @@ internal class Parser
         while (!args.IsEmpty)
         {
             // TODO: make this configurable? either stop parsing repeated arguments when encountered '--...' or no
-            // hmmm
-            if (IsFullNameOption(args[0]) && _parseOptions)
+            // also, check if this option actually exists?
+            if (_parseOptions && (IsFullNameOption(args[0]) || IsShortNameOptions(args[0])))
             {
                 return args;
             }
