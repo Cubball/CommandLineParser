@@ -91,7 +91,7 @@ internal class Parser
 
             if (option.Argument is null)
             {
-                _parsingResultBuilder.AddError(new(arg, $"Option '{option.FullName}' does not accept an argument, but it was provided: {optionValue}"));
+                _parsingResultBuilder.AddError(new(option.FullName, $"Option '{option.FullName}' does not accept an argument, but it was provided: {optionValue}"));
                 return [];
             }
 
@@ -207,7 +207,7 @@ internal class Parser
     {
         if (!argument.TryConvert(args[0], out var convertedValue))
         {
-            _parsingResultBuilder.AddError(new(args[0], $"Failed to convert arg '{args[0]}' to target type"));
+            _parsingResultBuilder.AddError(new(argument.Name, $"Failed to convert value '{args[0]}' to target type"));
             return [];
         }
 
