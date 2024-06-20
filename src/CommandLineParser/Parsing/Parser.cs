@@ -1,4 +1,5 @@
 using CommandLineParser.Models;
+using CommandLineParser.Parsing.Models;
 
 namespace CommandLineParser.Parsing;
 
@@ -77,36 +78,40 @@ internal class Parser
         }
 
         var separatorIndex = arg.IndexOf(FullNameOptionValueSeparator);
-        OptionDescriptor? option;
         if (separatorIndex != -1)
         {
-            var optionName = arg[..separatorIndex];
-            var optionValue = arg[(separatorIndex + 1)..];
-            option = _currentCommand.Options.FirstOrDefault(o => o.FullName == optionName);
-            if (option is null)
-            {
-                _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown option: {arg}"));
-                return [];
-            }
-
-            if (option.Argument is null)
-            {
-                _parsingResultBuilder.AddError(new(option.FullName, $"Option '{option.FullName}' does not accept an argument, but it was provided: {optionValue}"));
-                return [];
-            }
-
-            args[0] = optionValue;
-            return ParseSingleArgumentValue(args, option.Argument);
+            return ParseFullNameOptionWithSeparator(args, arg, separatorIndex);
         }
 
-        option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
+        var option = _currentCommand.Options.FirstOrDefault(o => o.FullName == arg);
         if (option is null)
         {
-            _parsingResultBuilder.AddError(new(arg, $"Encountered an unknown option: {arg}"));
+            _parsingResultBuilder.AddError(new(ParsingErrorType.UnknownOption, null, arg));
             return [];
         }
 
         return ParseOption(args[1..], option);
+    }
+
+    private Span<string> ParseFullNameOptionWithSeparator(Span<string> args, string arg, int separatorIndex)
+    {
+        var optionName = arg[..separatorIndex];
+        var optionValue = arg[(separatorIndex + 1)..];
+        var option = _currentCommand.Options.FirstOrDefault(o => o.FullName == optionName);
+        if (option is null)
+        {
+            _parsingResultBuilder.AddError(new(ParsingErrorType.UnknownOption, null, arg));
+            return [];
+        }
+
+        if (option.Argument is null)
+        {
+            _parsingResultBuilder.AddError(new(ParsingErrorType.ArgumentValueForFlag, option.FullName, optionValue));
+            return [];
+        }
+
+        args[0] = optionValue;
+        return ParseSingleArgumentValue(args, option.Argument);
     }
 
     private Span<string> ParseShortNameOptions(Span<string> args)
@@ -119,7 +124,7 @@ internal class Parser
             var option = _currentCommand.Options.FirstOrDefault(o => o.ShortName == shortName);
             if (option is null)
             {
-                _parsingResultBuilder.AddError(new(shortName.ToString(), $"Encountered an unknown short option: {ShortNameOptionPrefix}{shortName}"));
+                _parsingResultBuilder.AddError(new(ParsingErrorType.UnknownOption, null, shortName.ToString()));
                 return [];
             }
 
@@ -144,7 +149,7 @@ internal class Parser
     {
         if (_currentPositionalArgumentIndex >= _currentCommand.Arguments.Count)
         {
-            _parsingResultBuilder.AddError(new(args[0], $"Encountered an unknown token '{args[0]}' that is not the argument of any command or option"));
+            _parsingResultBuilder.AddError(new(ParsingErrorType.UnknownToken, null, args[0]));
             return [];
         }
 
@@ -169,7 +174,7 @@ internal class Parser
         var argument = option.Argument!;
         if (args.IsEmpty)
         {
-            _parsingResultBuilder.AddError(new(argument.Name, $"No args were provided for argument '{argument.Name}' for the '{option.FullName}' option"));
+            _parsingResultBuilder.AddError(new(ParsingErrorType.MissingArgumentValue, argument.Name));
             return [];
         }
 
@@ -207,7 +212,7 @@ internal class Parser
     {
         if (!argument.TryConvert(args[0], out var convertedValue))
         {
-            _parsingResultBuilder.AddError(new(argument.Name, $"Failed to convert value '{args[0]}' to target type"));
+            _parsingResultBuilder.AddError(new(ParsingErrorType.ConversionFailed, argument.Name, args[0]));
             return [];
         }
 

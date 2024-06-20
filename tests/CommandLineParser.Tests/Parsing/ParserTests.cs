@@ -967,7 +967,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == args[2]));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenValue == args[2] && e.Type == ParsingErrorType.UnknownToken));
     }
 
     [Fact]
@@ -982,7 +983,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == args[0]));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenValue == args[0] && e.Type == ParsingErrorType.UnknownOption));
     }
 
     [Fact]
@@ -997,7 +999,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == args[0]));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenValue == args[0] && e.Type == ParsingErrorType.UnknownOption));
     }
 
     [Fact]
@@ -1012,7 +1015,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == "a"));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenValue == "a" && e.Type == ParsingErrorType.UnknownOption));
     }
 
     [Fact]
@@ -1030,7 +1034,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == "b"));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenValue == "b" && e.Type == ParsingErrorType.UnknownOption));
     }
 
     [Fact]
@@ -1048,7 +1053,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == rootCommand.Options[0].Argument!.Name));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenName == rootCommand.Options[0].Argument!.Name && e.Type == ParsingErrorType.MissingArgumentValue));
     }
 
     [Fact]
@@ -1066,7 +1072,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == rootCommand.Options[0].Argument!.Name));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenName == rootCommand.Options[0].Argument!.Name && e.Type == ParsingErrorType.MissingArgumentValue));
     }
 
     [Fact]
@@ -1084,7 +1091,8 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == rootCommand.Options[0].FullName));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenName == rootCommand.Options[0].FullName && e.Type == ParsingErrorType.ArgumentValueForFlag));
     }
 
     [Fact]
@@ -1102,6 +1110,7 @@ public class ParserTests
         sut.Parse(args);
 
         // Assert
-        _mockParsingResultBuilder.Received(1).AddError(Arg.Is<ParsingError>(e => e.Arg == rootCommand.Arguments[0].Name));
+        _mockParsingResultBuilder.Received(1)
+            .AddError(Arg.Is<ParsingError>(e => e.TokenName == rootCommand.Arguments[0].Name && e.Type == ParsingErrorType.ConversionFailed));
     }
 }

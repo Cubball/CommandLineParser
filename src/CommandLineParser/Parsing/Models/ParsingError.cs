@@ -1,3 +1,3 @@
 namespace CommandLineParser.Parsing.Models;
 
-internal record ParsingError(string Arg, string Description);
+internal record ParsingError(ParsingErrorType Type, string? TokenName = null, string? TokenValue = null);
