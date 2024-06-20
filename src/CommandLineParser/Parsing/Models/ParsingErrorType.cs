@@ -7,4 +7,6 @@ internal enum ParsingErrorType
     UnknownToken,
     MissingArgumentValue,
     ConversionFailed,
+    MissingRequiredOption,
+    MissingPositionalArgument,
 }
