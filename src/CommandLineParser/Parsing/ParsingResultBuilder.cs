@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 using CommandLineParser.Models;
 using CommandLineParser.Parsing.Models;
 
@@ -11,7 +13,7 @@ internal class ParsingResultBuilder : IParsingResultBuilder
     private readonly Dictionary<IArgumentDescriptor, List<object>> _positionalArguments = [];
     private readonly List<ParsingError> _errors = [];
 
-    private CommandDescriptor _currentCommand = default!;
+    private CommandDescriptor? _currentCommand;
 
     public void AddError(ParsingError error)
     {
@@ -25,6 +27,7 @@ internal class ParsingResultBuilder : IParsingResultBuilder
 
     public void AddParsedArgumentValue(IArgumentDescriptor argument, object value)
     {
+        ThrowIfCurrentCommandIsNull();
         var argumentsOption = _currentCommand.Options
             .FirstOrDefault(o => o.Argument == argument);
         if (argumentsOption is null)
@@ -44,37 +47,9 @@ internal class ParsingResultBuilder : IParsingResultBuilder
 
     public ParsingResult Build()
     {
+        ThrowIfCurrentCommandIsNull();
         CheckMissingPositionalArguments();
         CheckMissingRequiredOptions();
-        return GetParsingResult();
-    }
-
-    private void CheckMissingPositionalArguments()
-    {
-        var missingPositionalArguments = _currentCommand.Arguments
-            .Except(_positionalArguments.Keys)
-            .ToArray();
-        foreach (var missingArgument in missingPositionalArguments)
-        {
-            AddError(new(ParsingErrorType.MissingPositionalArgument, missingArgument.Name));
-        }
-    }
-
-    private void CheckMissingRequiredOptions()
-    {
-        var requiredOptionArguments = _currentCommand.Options
-            .Where(o => o.Required && o.Argument is not null);
-        var missingOptionArguments = requiredOptionArguments
-            .Except(_options.Keys)
-            .ToArray();
-        foreach (var missingOption in missingOptionArguments)
-        {
-            AddError(new(ParsingErrorType.MissingRequiredOption, missingOption.FullName));
-        }
-    }
-
-    private ParsingResult GetParsingResult()
-    {
         if (_errors.Count > 0)
         {
             var failureContext = new ParsingFailureContext(_currentCommand, _errors);
@@ -87,6 +62,39 @@ internal class ParsingResultBuilder : IParsingResultBuilder
             ParsedFlags: _flags,
             ParsedOptions: _options);
         return new(successContext);
+    }
+
+    private void CheckMissingPositionalArguments()
+    {
+        var missingPositionalArguments = _currentCommand!.Arguments
+            .Except(_positionalArguments.Keys)
+            .ToArray();
+        foreach (var missingArgument in missingPositionalArguments)
+        {
+            AddError(new(ParsingErrorType.MissingPositionalArgument, missingArgument.Name));
+        }
+    }
+
+    private void CheckMissingRequiredOptions()
+    {
+        var requiredOptionArguments = _currentCommand!.Options
+            .Where(o => o.Required && o.Argument is not null);
+        var missingOptionArguments = requiredOptionArguments
+            .Except(_options.Keys)
+            .ToArray();
+        foreach (var missingOption in missingOptionArguments)
+        {
+            AddError(new(ParsingErrorType.MissingRequiredOption, missingOption.FullName));
+        }
+    }
+
+    [MemberNotNull(nameof(_currentCommand))]
+    private void ThrowIfCurrentCommandIsNull()
+    {
+        if (_currentCommand is null)
+        {
+            throw new InvalidOperationException("The current command needs to be set before performing this action");
+        }
     }
 
     private static void AddValueToDictionary<T>(Dictionary<T, List<object>> dictionary, T key, object value)
