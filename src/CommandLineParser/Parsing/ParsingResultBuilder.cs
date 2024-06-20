@@ -28,15 +28,16 @@ internal class ParsingResultBuilder : IParsingResultBuilder
     public void AddParsedArgumentValue(IArgumentDescriptor argument, object value)
     {
         ThrowIfCurrentCommandIsNull();
+        var append = argument.Repeated;
         var argumentsOption = _currentCommand.Options
             .FirstOrDefault(o => o.Argument == argument);
         if (argumentsOption is null)
         {
-            AddValueToDictionary(_positionalArguments, argument, value);
+            AddValueToDictionary(_positionalArguments, argument, value, append);
         }
         else
         {
-            AddValueToDictionary(_options, argumentsOption, value);
+            AddValueToDictionary(_options, argumentsOption, value, append);
         }
     }
 
@@ -97,13 +98,22 @@ internal class ParsingResultBuilder : IParsingResultBuilder
         }
     }
 
-    private static void AddValueToDictionary<T>(Dictionary<T, List<object>> dictionary, T key, object value)
+    private static void AddValueToDictionary<T>(
+        Dictionary<T, List<object>> dictionary,
+        T key,
+        object value,
+        bool append)
         where T : notnull
     {
         if (!dictionary.TryGetValue(key, out var values))
         {
             values = [];
             dictionary[key] = values;
+        }
+
+        if (!append)
+        {
+            values.Clear();
         }
 
         values.Add(value);

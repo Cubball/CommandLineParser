@@ -143,4 +143,29 @@ public class ParsingResultBuilderTests
             && kvp.Value.Contains(69)
             && kvp.Value.Contains(420));
     }
+
+    // NOTE: should this behavior be configurable?
+    [Fact]
+    public void Build_ShouldReturnAddedPositionalArgumentsLastValues_WhenItHasOneValueButMultipleWereProvided()
+    {
+        // Arrange
+        var command = new CommandDescriptor("main", "description", [],
+        [
+            new ArgumentDescriptor<int>("arg1"),
+        ], []);
+        _sut.SetCurrentCommand(command);
+
+        // Act
+        _sut.AddParsedArgumentValue(command.Arguments[0], 69);
+        _sut.AddParsedArgumentValue(command.Arguments[0], 420);
+        var result = _sut.Build();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        var successContext = result.SuccessContext;
+        successContext!.ParsedPositionalArguments.Should().Contain(kvp =>
+            kvp.Key == command.Arguments[0]
+            && kvp.Value.Count == 1
+            && kvp.Value.Contains(420));
+    }
 }
