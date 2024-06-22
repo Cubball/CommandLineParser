@@ -7,13 +7,15 @@ internal class CommandDescriptor
         string description,
         IReadOnlyList<CommandDescriptor> subcommands,
         IReadOnlyList<IArgumentDescriptor> arguments,
-        IReadOnlyList<OptionDescriptor> options)
+        IReadOnlyList<OptionDescriptor> options,
+        Action<ParsedCommand> handler)
     {
         Name = name;
         Description = description;
         Subcommands = subcommands;
         Arguments = arguments;
         Options = options;
+        Handler = handler;
     }
 
     public string Name { get; }
@@ -25,4 +27,6 @@ internal class CommandDescriptor
     public IReadOnlyList<IArgumentDescriptor> Arguments { get; }
 
     public IReadOnlyList<OptionDescriptor> Options { get; }
+
+    public Action<ParsedCommand> Handler { get; }
 }

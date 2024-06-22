@@ -26,4 +26,9 @@ internal class CLIApplication
         var result = _parsingResultBuilder.Build();
         _pipeline(result);
     }
+
+    public static CLIApplicationBuilder CreateEmptyBuilder()
+    {
+        return new();
+    }
 }
