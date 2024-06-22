@@ -12,7 +12,6 @@ internal class CommandDescriptor
         Name = name;
         Description = description;
         Subcommands = subcommands;
-        // TODO: only the last argument can be repeated, need to enforce it probably
         Arguments = arguments;
         Options = options;
     }
