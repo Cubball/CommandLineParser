@@ -51,18 +51,12 @@ internal class ParsingResultBuilder : IParsingResultBuilder
         ThrowIfCurrentCommandIsNull();
         CheckMissingPositionalArguments();
         CheckMissingRequiredOptions();
-        if (_errors.Count > 0)
-        {
-            var failureContext = new ParsingFailureContext(_currentCommand, _errors);
-            return new(failureContext);
-        }
-
-        var successContext = new ParsingSuccessContext(
+        return new(
             Command: _currentCommand,
             ParsedPositionalArguments: _positionalArguments,
             ParsedFlags: _flags,
-            ParsedOptions: _options);
-        return new(successContext);
+            ParsedOptions: _options,
+            Errors: _errors);
     }
 
     private void CheckMissingPositionalArguments()

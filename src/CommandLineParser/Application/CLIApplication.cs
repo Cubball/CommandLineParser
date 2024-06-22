@@ -8,18 +8,15 @@ internal class CLIApplication
 {
     private readonly Parser _parser;
     private readonly ParsingResultBuilder _parsingResultBuilder;
-    private readonly Action<ParsingSuccessContext> _successPipeline;
-    private readonly Action<ParsingFailureContext> _failurePipeline;
+    private readonly Action<ParsingResult> _pipeline;
 
     public CLIApplication(
         CommandDescriptor rootCommand,
-        Action<ParsingSuccessContext> successPipeline,
-        Action<ParsingFailureContext> failurePipeline)
+        Action<ParsingResult> pipeline)
     {
         _parsingResultBuilder = new();
         _parser = new(_parsingResultBuilder, rootCommand);
-        _successPipeline = successPipeline;
-        _failurePipeline = failurePipeline;
+        _pipeline = pipeline;
     }
 
     public void Run(string[] args)
@@ -27,13 +24,6 @@ internal class CLIApplication
         _parser.Parse(args);
         // NOTE: I do not like it that much
         var result = _parsingResultBuilder.Build();
-        if (result.IsSuccess)
-        {
-            _successPipeline(result.SuccessContext);
-        }
-        else
-        {
-            _failurePipeline(result.FailureContext);
-        }
+        _pipeline(result);
     }
 }

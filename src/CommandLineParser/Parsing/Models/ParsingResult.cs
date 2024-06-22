@@ -1,25 +1,13 @@
-using System.Diagnostics.CodeAnalysis;
+using CommandLineParser.Models;
 
 namespace CommandLineParser.Parsing.Models;
 
-internal class ParsingResult
+internal record ParsingResult(
+    CommandDescriptor Command,
+    IReadOnlyDictionary<IArgumentDescriptor, List<object>> ParsedPositionalArguments,
+    IReadOnlyList<OptionDescriptor> ParsedFlags,
+    IReadOnlyDictionary<OptionDescriptor, List<object>> ParsedOptions,
+    IReadOnlyList<ParsingError> Errors)
 {
-    public ParsingResult(ParsingSuccessContext successContext)
-    {
-        SuccessContext = successContext;
-        IsSuccess = true;
-    }
-
-    public ParsingResult(ParsingFailureContext failureContext)
-    {
-        FailureContext = failureContext;
-    }
-
-    [MemberNotNullWhen(true, nameof(SuccessContext))]
-    [MemberNotNullWhen(false, nameof(FailureContext))]
-    public bool IsSuccess { get; }
-
-    public ParsingSuccessContext? SuccessContext { get; }
-
-    public ParsingFailureContext? FailureContext { get; }
+    public bool IsSuccess => Errors.Count == 0;
 }
