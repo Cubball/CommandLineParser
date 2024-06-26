@@ -24,7 +24,7 @@ public class ParserTests
             new ArgumentDescriptor<string>("arg1"),
             new ArgumentDescriptor<string>("arg2"),
             new ArgumentDescriptor<string>("arg3"),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -46,7 +46,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [],
         [
             new ArgumentDescriptor<string>("arg1", repeated: true),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -66,7 +66,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [],
         [
             new ArgumentDescriptor<string>("arg1", repeated: true),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -89,7 +89,7 @@ public class ParserTests
         [
             new ArgumentDescriptor<string>("arg1", repeated: false),
             new ArgumentDescriptor<string>("arg2", repeated: true),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -112,7 +112,7 @@ public class ParserTests
         [
             new ArgumentDescriptor<string>("arg1", repeated: true),
             new ArgumentDescriptor<string>("arg2", repeated: false),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -140,7 +140,7 @@ public class ParserTests
         ], [
             new OptionDescriptor("--opt1", "description"),
             new OptionDescriptor("--opt2", "description", new ArgumentDescriptor<string>("opt2arg")),
-        ]);
+        ], _ => { });
         var args = new[] { "foo", "--opt1", "bar", "--opt2", "value", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -167,7 +167,7 @@ public class ParserTests
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
             new OptionDescriptor("--opt2", "description", shortName: 'b'),
             new OptionDescriptor("--opt3", "description", new ArgumentDescriptor<string>("opt3arg"), shortName: 'c'),
-        ]);
+        ], _ => { });
         var args = new[] { "foo", "-a", "bar", "-bc", "value", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -189,7 +189,7 @@ public class ParserTests
         [
             new ArgumentDescriptor<string>("arg1", repeated: false),
             new ArgumentDescriptor<string>("arg2", repeated: false),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "--", "bar" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -212,7 +212,7 @@ public class ParserTests
             new ArgumentDescriptor<string>("arg1", repeated: false),
             new ArgumentDescriptor<string>("arg2", repeated: false),
             new ArgumentDescriptor<string>("arg3", repeated: false),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "--", "bar", "--" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -235,7 +235,7 @@ public class ParserTests
             new ArgumentDescriptor<string>("arg1", repeated: true),
         ], [
             new OptionDescriptor("--opt1", "description"),
-        ]);
+        ], _ => { });
         var args = new[] { "foo", "bar", "baz", "--opt1" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -259,7 +259,7 @@ public class ParserTests
             new ArgumentDescriptor<string>("arg1", repeated: true),
         ], [
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
-        ]);
+        ], _ => { });
         var args = new[] { "foo", "bar", "baz", "-a" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -283,7 +283,7 @@ public class ParserTests
         [
             new ArgumentDescriptor<string>("arg1", repeated: true),
             new ArgumentDescriptor<string>("arg2", repeated: false),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "bar", "--", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -306,7 +306,7 @@ public class ParserTests
         [
             new ArgumentDescriptor<string>("arg1", repeated: false),
             new ArgumentDescriptor<string>("arg2", repeated: true),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "--", "bar", "--" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -334,7 +334,7 @@ public class ParserTests
         ], [
             new OptionDescriptor("--opt1", "description"),
             new OptionDescriptor("--opt2", "description", shortName: 'a'),
-        ]);
+        ], _ => { });
         var args = new[] { "--", "foo", "bar", "--opt1", "baz", "-a" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -360,7 +360,7 @@ public class ParserTests
         ], [
             new OptionDescriptor("--opt1", "description"),
             new OptionDescriptor("--opt2", "description", shortName: 'a'),
-        ]);
+        ], _ => { });
         var args = new[] { "--", "foo", "bar", "--opt1", "baz", "-a" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -385,7 +385,7 @@ public class ParserTests
             new OptionDescriptor("--opt1", "description"),
             new OptionDescriptor("--opt2", "description"),
             new OptionDescriptor("--opt3", "description"),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "--opt3", "--opt2" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -407,7 +407,7 @@ public class ParserTests
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg")),
             new OptionDescriptor("--opt2", "description", argument: new ArgumentDescriptor<string>("opt2arg")),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "foo", "--opt2", "bar" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -429,7 +429,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -454,7 +454,7 @@ public class ParserTests
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
             new OptionDescriptor("--opt2", "description"),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "foo", "bar", "--opt2" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -478,7 +478,7 @@ public class ParserTests
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
             new OptionDescriptor("--opt2", "description", shortName: 'a'),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "foo", "bar", "-a" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -504,7 +504,7 @@ public class ParserTests
         ],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "foo", "bar", "--", "--opt1" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -528,7 +528,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg")),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1=foo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -552,7 +552,7 @@ public class ParserTests
         ],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1=foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -576,7 +576,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1=foo", "--opt1=bar", "--opt1=baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -602,7 +602,7 @@ public class ParserTests
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
             new OptionDescriptor("--opt2", "description", shortName: 'b'),
             new OptionDescriptor("--opt3", "description", shortName: 'c'),
-        ]);
+        ], _ => { });
         var args = new[] { "-b", "-a", "-c" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -625,7 +625,7 @@ public class ParserTests
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
             new OptionDescriptor("--opt2", "description", shortName: 'b'),
             new OptionDescriptor("--opt3", "description", shortName: 'c'),
-        ]);
+        ], _ => { });
         var args = new[] { "-acb" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -648,7 +648,7 @@ public class ParserTests
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
             new OptionDescriptor("--opt2", "description", shortName: 'b', argument: new ArgumentDescriptor<string>("opt2arg")),
             new OptionDescriptor("--opt3", "description", shortName: 'c'),
-        ]);
+        ], _ => { });
         var args = new[] { "-acbfoo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -672,7 +672,7 @@ public class ParserTests
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
             new OptionDescriptor("--opt2", "description", shortName: 'b', argument: new ArgumentDescriptor<string>("opt2arg")),
             new OptionDescriptor("--opt3", "description", shortName: 'c'),
-        ]);
+        ], _ => { });
         var args = new[] { "-abcfoo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -695,7 +695,7 @@ public class ParserTests
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
             new OptionDescriptor("--opt2", "description", shortName: 'b', argument: new ArgumentDescriptor<string>("opt2arg")),
             new OptionDescriptor("--opt3", "description", shortName: 'c'),
-        ]);
+        ], _ => { });
         var args = new[] { "-acb", "foo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -717,7 +717,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
-        ]);
+        ], _ => { });
         var args = new[] { "-a", "foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -742,7 +742,7 @@ public class ParserTests
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
             new OptionDescriptor("--opt2", "description", shortName: 'b'),
-        ]);
+        ], _ => { });
         var args = new[] { "-a", "foo", "bar", "-b" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -766,7 +766,7 @@ public class ParserTests
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
             new OptionDescriptor("--opt2", "description"),
-        ]);
+        ], _ => { });
         var args = new[] { "-a", "foo", "bar", "--opt2" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -792,7 +792,7 @@ public class ParserTests
         ],
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
-        ]);
+        ], _ => { });
         var args = new[] { "-a", "foo", "bar", "--", "--opt1" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -821,7 +821,7 @@ public class ParserTests
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
             new OptionDescriptor("--opt2", "description", shortName: 'b'),
-        ]);
+        ], _ => { });
         var args = new[] { "-afoo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -845,7 +845,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg", repeated: true)),
-        ]);
+        ], _ => { });
         var args = new[] { "-afoo", "-abar", "-abaz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -870,7 +870,7 @@ public class ParserTests
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a', argument: new ArgumentDescriptor<string>("opt1arg")),
             new OptionDescriptor("--opt2", "description", shortName: 'b', argument: new ArgumentDescriptor<string>("opt2arg")),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "--opt2", "-a", "-b", "--opt2", "-a", "-b", "--opt1" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -894,7 +894,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [],
         [
             new ArgumentDescriptor<string>("arg1"),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "arg1" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -912,9 +912,9 @@ public class ParserTests
         [
             new CommandDescriptor("sub", "description",
             [
-                new CommandDescriptor("subsub", "description", [], [], []),
-            ], [], []),
-        ], [], []);
+                new CommandDescriptor("subsub", "description", [], [], [], _ => { }),
+            ], [], [], _ => { }),
+        ], [], [], _ => { });
         var args = new[] { "sub", "subsub" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -934,11 +934,11 @@ public class ParserTests
     {
         var rootCommand = new CommandDescriptor("main", "description",
         [
-            new CommandDescriptor("sub", "description", [], [], []),
+            new CommandDescriptor("sub", "description", [], [], [], _ => { }),
         ], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg"))
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1", "sub" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -959,7 +959,7 @@ public class ParserTests
         [
             new ArgumentDescriptor<string>("arg1"),
             new ArgumentDescriptor<string>("arg2"),
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo", "bar", "baz" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -975,7 +975,7 @@ public class ParserTests
     public void Parse_AddsError_WhenEncountersUnexpectedFullNameOption()
     {
         // Arragne
-        var rootCommand = new CommandDescriptor("main", "description", [], [], []);
+        var rootCommand = new CommandDescriptor("main", "description", [], [], [], _ => { });
         var args = new[] { "--foo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -991,7 +991,7 @@ public class ParserTests
     public void Parse_AddsError_WhenEncountersUnexpectedFullNameOptionWithValue()
     {
         // Arragne
-        var rootCommand = new CommandDescriptor("main", "description", [], [], []);
+        var rootCommand = new CommandDescriptor("main", "description", [], [], [], _ => { });
         var args = new[] { "--foo=bar" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -1007,7 +1007,7 @@ public class ParserTests
     public void Parse_AddsError_WhenEncountersUnexpectedShortNameOption()
     {
         // Arragne
-        var rootCommand = new CommandDescriptor("main", "description", [], [], []);
+        var rootCommand = new CommandDescriptor("main", "description", [], [], [], _ => { });
         var args = new[] { "-a" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -1026,7 +1026,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", shortName: 'a'),
-        ]);
+        ], _ => { });
         var args = new[] { "-ab" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -1045,7 +1045,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg")),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -1064,7 +1064,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<string>("opt1arg"), shortName: 'a'),
-        ]);
+        ], _ => { });
         var args = new[] { "-a" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -1083,7 +1083,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description"),
-        ]);
+        ], _ => { });
         var args = new[] { "--opt1=foo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 
@@ -1102,7 +1102,7 @@ public class ParserTests
         var rootCommand = new CommandDescriptor("main", "description", [],
         [
             new ArgumentDescriptor<int>("arg1")
-        ], []);
+        ], [], _ => { });
         var args = new[] { "foo" };
         var sut = new Parser(_mockParsingResultBuilder, rootCommand);
 

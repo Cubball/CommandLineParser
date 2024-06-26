@@ -14,7 +14,7 @@ public class ParsingResultBuilderTests
     public void Build_ShouldReturnSuccessContext_WhenOnlyCommandHasBeenSet()
     {
         // Arrange
-        var command = new CommandDescriptor("main", "description", [], [], []);
+        var command = new CommandDescriptor("main", "description", [], [], [], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -22,9 +22,7 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext.Should().NotBeNull();
-        successContext!.Command.Should().Be(command);
+        result.Command.Should().Be(command);
     }
 
     [Fact]
@@ -46,7 +44,7 @@ public class ParsingResultBuilderTests
         [
             new OptionDescriptor("--opt1", "description"),
             new OptionDescriptor("--opt2", "description"),
-        ]);
+        ], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -56,10 +54,9 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext!.ParsedFlags.Should().HaveCount(2);
-        successContext.ParsedFlags.Should().Contain(command.Options[0]);
-        successContext.ParsedFlags.Should().Contain(command.Options[1]);
+        result.ParsedFlags.Should().HaveCount(2);
+        result.ParsedFlags.Should().Contain(command.Options[0]);
+        result.ParsedFlags.Should().Contain(command.Options[1]);
     }
 
     [Fact]
@@ -70,7 +67,7 @@ public class ParsingResultBuilderTests
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<int>("opt1arg")),
             new OptionDescriptor("--opt2", "description", argument: new ArgumentDescriptor<string>("opt2arg")),
-        ]);
+        ], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -80,12 +77,11 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext!.ParsedOptions.Should().Contain(kvp =>
+        result.ParsedOptions.Should().Contain(kvp =>
             kvp.Key == command.Options[0]
             && kvp.Value.Count == 1
             && kvp.Value.Contains(69));
-        successContext!.ParsedOptions.Should().Contain(kvp =>
+        result.ParsedOptions.Should().Contain(kvp =>
             kvp.Key == command.Options[1]
             && kvp.Value.Count == 1
             && kvp.Value.Contains("foo"));
@@ -98,7 +94,7 @@ public class ParsingResultBuilderTests
         var command = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<int>("opt1arg", repeated: true))
-        ]);
+        ], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -108,8 +104,7 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext!.ParsedOptions.Should().Contain(kvp =>
+        result.ParsedOptions.Should().Contain(kvp =>
             kvp.Key == command.Options[0]
             && kvp.Value.Count == 2
             && kvp.Value.Contains(69)
@@ -124,7 +119,7 @@ public class ParsingResultBuilderTests
         var command = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<int>("opt1arg"))
-        ]);
+        ], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -134,8 +129,7 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext!.ParsedOptions.Should().Contain(kvp =>
+        result.ParsedOptions.Should().Contain(kvp =>
             kvp.Key == command.Options[0]
             && kvp.Value.Count == 1
             && kvp.Value.Contains(420));
@@ -149,7 +143,7 @@ public class ParsingResultBuilderTests
         [
             new ArgumentDescriptor<int>("arg1"),
             new ArgumentDescriptor<string>("arg2"),
-        ], []);
+        ], [], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -159,12 +153,11 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext!.ParsedPositionalArguments.Should().Contain(kvp =>
+        result.ParsedPositionalArguments.Should().Contain(kvp =>
             kvp.Key == command.Arguments[0]
             && kvp.Value.Count == 1
             && kvp.Value.Contains(69));
-        successContext!.ParsedPositionalArguments.Should().Contain(kvp =>
+        result.ParsedPositionalArguments.Should().Contain(kvp =>
             kvp.Key == command.Arguments[1]
             && kvp.Value.Count == 1
             && kvp.Value.Contains("foo"));
@@ -177,7 +170,7 @@ public class ParsingResultBuilderTests
         var command = new CommandDescriptor("main", "description", [],
         [
             new ArgumentDescriptor<int>("arg1", repeated: true),
-        ], []);
+        ], [], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -187,8 +180,7 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext!.ParsedPositionalArguments.Should().Contain(kvp =>
+        result.ParsedPositionalArguments.Should().Contain(kvp =>
             kvp.Key == command.Arguments[0]
             && kvp.Value.Count == 2
             && kvp.Value.Contains(69)
@@ -203,7 +195,7 @@ public class ParsingResultBuilderTests
         var command = new CommandDescriptor("main", "description", [],
         [
             new ArgumentDescriptor<int>("arg1"),
-        ], []);
+        ], [], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -213,8 +205,7 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        var successContext = result.SuccessContext;
-        successContext!.ParsedPositionalArguments.Should().Contain(kvp =>
+        result.ParsedPositionalArguments.Should().Contain(kvp =>
             kvp.Key == command.Arguments[0]
             && kvp.Value.Count == 1
             && kvp.Value.Contains(420));
@@ -224,7 +215,7 @@ public class ParsingResultBuilderTests
     public void Build_ShouldReturnFailureContext_WhenErrorsWereAdded()
     {
         // Arrange
-        var command = new CommandDescriptor("main", "description", [], [], []);
+        var command = new CommandDescriptor("main", "description", [], [], [], _ => { });
         _sut.SetCurrentCommand(command);
         var error = new ParsingError(ParsingErrorType.UnknownToken);
 
@@ -234,11 +225,10 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        var failureContext = result.FailureContext;
-        failureContext.Should().NotBeNull();
-        failureContext!.Command.Should().Be(command);
-        failureContext.Errors.Should().HaveCount(1);
-        failureContext.Errors[0].Should().Be(error);
+        result.Should().NotBeNull();
+        result.Command.Should().Be(command);
+        result.Errors.Should().HaveCount(1);
+        result.Errors[0].Should().Be(error);
     }
 
     [Fact]
@@ -248,7 +238,7 @@ public class ParsingResultBuilderTests
         var command = new CommandDescriptor("main", "description", [],
         [
             new ArgumentDescriptor<int>("arg1"),
-        ], []);
+        ], [], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -256,10 +246,9 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        var failureContext = result.FailureContext;
-        failureContext.Should().NotBeNull();
-        failureContext!.Command.Should().Be(command);
-        failureContext.Errors.Should().Satisfy(e =>
+        result.Should().NotBeNull();
+        result.Command.Should().Be(command);
+        result.Errors.Should().Satisfy(e =>
             e.Type == ParsingErrorType.MissingPositionalArgument && e.TokenName == command.Arguments[0].Name);
     }
 
@@ -270,7 +259,7 @@ public class ParsingResultBuilderTests
         var command = new CommandDescriptor("main", "description", [], [],
         [
             new OptionDescriptor("--opt1", "description", argument: new ArgumentDescriptor<int>("arg1"), required: true)
-        ]);
+        ], _ => { });
         _sut.SetCurrentCommand(command);
 
         // Act
@@ -278,10 +267,9 @@ public class ParsingResultBuilderTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        var failureContext = result.FailureContext;
-        failureContext.Should().NotBeNull();
-        failureContext!.Command.Should().Be(command);
-        failureContext.Errors.Should().Satisfy(e =>
+        result.Should().NotBeNull();
+        result.Command.Should().Be(command);
+        result.Errors.Should().Satisfy(e =>
             e.Type == ParsingErrorType.MissingRequiredOption && e.TokenName == command.Options[0].FullName);
     }
 
