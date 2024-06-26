@@ -2,6 +2,9 @@ namespace CommandLineParser.Models;
 
 internal class OptionDescriptor
 {
+    public const string FullNameOptionPrefix = "--";
+    public const string ShortNameOptionPrefix = "-";
+
     public OptionDescriptor(
         string fullName,
         string description,

@@ -5,8 +5,6 @@ namespace CommandLineParser.Parsing;
 
 internal class Parser
 {
-    private const string FullNameOptionPrefix = "--";
-    private const string ShortNameOptionPrefix = "-";
     private const char FullNameOptionValueSeparator = '=';
 
     private readonly IParsingResultBuilder _parsingResultBuilder;
@@ -71,7 +69,7 @@ internal class Parser
     private Span<string> ParseFullNameOption(Span<string> args)
     {
         var arg = args[0];
-        if (arg == FullNameOptionPrefix)
+        if (arg == OptionDescriptor.FullNameOptionPrefix)
         {
             _parseOptions = false;
             return args[1..];
@@ -117,7 +115,7 @@ internal class Parser
     private Span<string> ParseShortNameOptions(Span<string> args)
     {
         var arg = args[0];
-        var shortOptions = arg.AsSpan(ShortNameOptionPrefix.Length);
+        var shortOptions = arg.AsSpan(OptionDescriptor.ShortNameOptionPrefix.Length);
         for (var i = 0; i < shortOptions.Length; i++)
         {
             var shortName = shortOptions[i];
@@ -220,7 +218,8 @@ internal class Parser
         return args[1..];
     }
 
-    private static bool IsFullNameOption(string arg) => arg.StartsWith(FullNameOptionPrefix, StringComparison.InvariantCulture);
+    private static bool IsFullNameOption(string arg) => arg.StartsWith(OptionDescriptor.FullNameOptionPrefix, StringComparison.InvariantCulture);
 
-    private static bool IsShortNameOptions(string arg) => arg.StartsWith(ShortNameOptionPrefix, StringComparison.InvariantCulture) && arg.Length > ShortNameOptionPrefix.Length;
+    private static bool IsShortNameOptions(string arg) => arg.StartsWith(OptionDescriptor.ShortNameOptionPrefix, StringComparison.InvariantCulture)
+        && arg.Length > OptionDescriptor.ShortNameOptionPrefix.Length;
 }
