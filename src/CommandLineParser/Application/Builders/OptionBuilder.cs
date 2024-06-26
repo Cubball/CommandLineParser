@@ -120,7 +120,7 @@ internal class OptionBuilder
     {
         if (_name is null || _description is null)
         {
-            throw new InvalidOperationException("You need to set name and description for the option");
+            throw new InvalidOperationException("Name and description need to be set before performing this action");
         }
     }
 

@@ -68,7 +68,7 @@ internal class PositionalArgumentBuilder
     {
         if (_name is null || _description is null || _argumentCreator is null)
         {
-            throw new InvalidOperationException("You need to set name, description and type for the positional argument");
+            throw new InvalidOperationException("Name, description and type need to be set before performing this action");
         }
     }
 }

@@ -86,7 +86,7 @@ internal class CommandBuilder
     {
         if (_name is null || _description is null || _handler is null)
         {
-            throw new InvalidOperationException("You need to set name, description and handler for the command");
+            throw new InvalidOperationException("Name, description and handler need to be set before performing this action");
         }
     }
 
