@@ -1,3 +1,4 @@
+using CommandLineParser.Application.Builders;
 using CommandLineParser.Models;
 using CommandLineParser.Parsing;
 using CommandLineParser.Parsing.Models;
@@ -27,8 +28,8 @@ internal class CLIApplication
         _pipeline(result);
     }
 
-    public static CLIApplicationBuilder CreateEmptyBuilder()
+    public static ICLIApplicationRootCommandBuilder CreateEmptyBuilder()
     {
-        return new();
+        return CLIApplicationBuilder.CreateEmpty();
     }
 }
