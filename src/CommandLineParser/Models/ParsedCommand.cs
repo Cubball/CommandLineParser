@@ -60,14 +60,14 @@ internal record ParsedCommand(
 
     public bool GetFlag(string fullName)
     {
-        var option = Command.Options.FirstOrDefault(c => c.FullName == fullName);
-        return option is not null;
+        var option = GetOptionOrThrow(fullName);
+        return ParsedFlags.Contains(option);
     }
 
     public bool GetFlag(char shortName)
     {
-        var option = Command.Options.FirstOrDefault(c => c.ShortName == shortName);
-        return option is not null;
+        var option = GetOptionOrThrow(shortName);
+        return ParsedFlags.Contains(option);
     }
 
     public T GetPositionalArgumentValue<T>(int index)
